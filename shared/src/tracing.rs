@@ -10,7 +10,5 @@ pub fn init_custom_rust_subscriber() {
         .with_ansi(false)
         // Disabling time is handy because CloudWatch will add the ingestion time.
         .without_time()
-        // Remove the name of the function from every log entry.
-        .with_target(false)
         .init();
 }

@@ -1,26 +1,62 @@
-use lambda_runtime::{service_fn, Error, LambdaEvent};
+use lambda_runtime::{
+    Error,
+    LambdaEvent,
+    service_fn,
+    tracing::info
+};
 use serde_json::Value;
 
-use shared;
+use shared::{
+    dynamodb::BirthdaysDBClient,
+    messaging::GMMessenger,
+    tracing::init_custom_rust_subscriber,
+};
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    shared::tracing::init_custom_rust_subscriber();
+    init_custom_rust_subscriber();
 
     lambda_runtime::run(service_fn(checker)).await?;
     Ok(())
 }
 
 async fn checker(_event: LambdaEvent<Value>) -> Result<(), Error> {
-    let db_client = shared::dynamodb::BirthdaysDBClient::new().await;
-
-    let todays_birthdays = db_client.get_todays_birthdays().await;
+    // Gets a Vec of today's birthdays from the DynamoDB instance.
+    // May be empty if there are no registered birthday's for today's date.
+    let todays_birthdays = BirthdaysDBClient::new().await.get_todays_birthdays().await;
 
     if todays_birthdays.is_empty() {
-        println!("No birthdays today! Maybe next time!");
+        info!("No birthdays found for today's date, all done!");
     } else {
-        for birthday_info in todays_birthdays {
-            println!("It's {}'s birthday today! Don't forget to wish them a happy birthday!", birthday_info["fullname"].as_s().unwrap())
+        let messenger = GMMessenger::new();
+        for birthday in todays_birthdays {
+            let fullname: String = birthday["fullname"]
+                .as_s()
+                .expect("Couldn't convert `fullname` to String during birthday messaging.")
+                .to_owned();
+
+            let user_id: u64 = birthday["user_id"]
+                .as_n()
+                .expect("Couldn't convert user_id to AttributeValue::N String during birthday messaging.")
+                .parse()
+                .expect("Couldn't convert user_id String to u64 during birthday messaging.");
+
+            info!(
+                "Found birthday today for {} ({}), sending birthday message...",
+                fullname, user_id
+            );
+
+            messenger
+                .send_message_with_mention(
+                    format!(
+                        "It's {}'s birthday today! Don't forget to wish them a happy birthday!",
+                        fullname
+                    ),
+                    5,
+                    fullname.len(),
+                    user_id,
+                )
+                .await;
         }
     }
 

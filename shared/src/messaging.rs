@@ -14,7 +14,7 @@ impl GMMessenger {
         }
     }
 
-    pub async fn send_message_with_mention(&self, msg_text: String, men_loci_start_pos: u16, men_loci_len: u16, men_id: u64) {
+    pub async fn send_message_with_mention(&self, msg_text: String, men_loci_start_pos: usize, men_loci_len: usize, men_id: u64) {
         let msg_body = json!({
             "bot_id": secrets::GROUPME_BOT_ID,
             "text": msg_text,

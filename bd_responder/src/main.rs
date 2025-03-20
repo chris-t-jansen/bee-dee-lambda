@@ -66,9 +66,7 @@ async fn cmd_hello_handler(event_value: &Value) {
         .send_message_with_mention(
             format!("Hello, {}!", name),
             7,
-            name.len()
-                .try_into()
-                .expect("Couldn't convert length of user's name from usize to u16."),
+            name.len(),
             id.parse()
                 .expect("Couldn't parse user's id from String to u64 in `hello` command"),
         )
