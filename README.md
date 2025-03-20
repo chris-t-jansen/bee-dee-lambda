@@ -44,8 +44,8 @@ As for why I'm open-sourcing my work, the AWS SDKs aren't very well documented a
     cargo lambda build --release
     ```
 
-    > [!IMPORTANT]  
-    > If you're deploying to a Lambda function that is setup to use the `arm64` architecture instead of the `x86_64` architecture, you'll need to append the `--arm64` flag to the above build command.
+> [!IMPORTANT]  
+> If you're deploying to a Lambda function that is setup to use the `arm64` architecture instead of the `x86_64` architecture, you'll need to append the `--arm64` flag to the above build command.
 
 That should build both binary functions (`bd_checker` and `bd_responder`) to their own folders in the `/target/lambda/` directory. Both built binaries should be named `bootstrap`, which they need to be for the Lambda runtime to detect and run them properly.
 
