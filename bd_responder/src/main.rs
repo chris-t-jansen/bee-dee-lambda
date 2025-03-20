@@ -38,6 +38,7 @@ async fn message_handler(event_value: &Value) {
     let msg_text: String = get_from_body_json(&event_value, "text").unwrap_or_default();
     let msg_parts: (&str, &str) = msg_text.trim().split_once(' ').unwrap_or_default();
 
+    // Matches "!bd" (case insensitive)
     let mut command_re = Regex::new(r"![Bb][Dd]").unwrap();
     if !command_re.is_match(msg_parts.0) {
         info!("Callback message isn't a command (doesn't begin with `!bd`), returning...");
@@ -51,24 +52,31 @@ async fn message_handler(event_value: &Value) {
         return;
     }
 
+    // Matches "me" (case insensitive)
     command_re = Regex::new(r"[Mm][Ee]").unwrap();
     if command_re.is_match(msg_parts.1) {
         cmd_me_handler(&event_value).await;
         return;
     }
+
+    // If we got to the end, then the text started with "!bd" but didn't contain a valid command phrase,
+    // so send a message telling the sender that Bee-Dee couldn't understand what they were asking.
+    cmd_error_handler(&event_value).await;
 }
 
 async fn cmd_hello_handler(event_value: &Value) {
     let name = get_from_body_json(&event_value, "name").unwrap();
-    let id = get_from_body_json(&event_value, "sender_id").unwrap();
+    let user_id = get_from_body_json(&event_value, "sender_id")
+        .unwrap()
+        .parse()
+        .expect("Couldn't parse user's id from String to u64 in `hello` handler");
 
     GMMessenger::new()
         .send_message_with_mention(
             format!("Hello, {}!", name),
             7,
             name.len(),
-            id.parse()
-                .expect("Couldn't parse user's id from String to u64 in `hello` command"),
+            user_id,
         )
         .await;
 }
@@ -77,7 +85,7 @@ async fn cmd_me_handler(event_value: &Value) {
     let user_id = get_from_body_json(&event_value, "sender_id")
         .unwrap()
         .parse()
-        .expect("Couldn't parse user's id from String to u64 in `me` command");
+        .expect("Couldn't parse user's id from String to u64 in `me` handler");
 
     let birthday_result = BirthdaysDBClient::new()
         .await
@@ -123,14 +131,20 @@ async fn cmd_me_handler(event_value: &Value) {
         .await;
 }
 
-fn check_user_sender(event_value: &Value) -> bool {
-    let sender_type_result = get_from_body_json(&event_value, "sender_type");
+async fn cmd_error_handler(event_value: &Value) {
+    let user_id = get_from_body_json(&event_value, "sender_id")
+        .unwrap()
+        .parse()
+        .expect("Couldn't parse user's id from String to u64 in error handler");
 
-    if let Some(sender_type) = sender_type_result {
-        return sender_type == "user";
-    } else {
-        return false;
-    }
+    GMMessenger::new()
+        .send_message_with_mention(
+            "Uh-oh, looks like you were trying to ask me something, but I'm not sure what! Check your spelling and try again.".to_string(),
+            18,
+            3,
+            user_id,
+        )
+        .await;
 }
 
 fn auth_valid_agent(event_value: &Value) -> bool {
@@ -139,8 +153,21 @@ fn auth_valid_agent(event_value: &Value) -> bool {
         .as_str()
         .unwrap_or("");
 
+    info!("Found userAgent `{}`, comparing to `GroupMeBotNotifier`...", user_agent);
+
     // Checks if the user agent text matches the expected text, returning the result
     user_agent.starts_with("GroupMeBotNotifier")
+}
+
+fn check_user_sender(event_value: &Value) -> bool {
+    let sender_type_result = get_from_body_json(&event_value, "sender_type");
+
+    if let Some(sender_type) = sender_type_result {
+        info!("Found sender_type `{}`, comparing to `user`...", sender_type);
+        return sender_type == "user";
+    } else {
+        return false;
+    }
 }
 
 fn get_from_body_json(event_value: &Value, key: &str) -> Option<String> {
