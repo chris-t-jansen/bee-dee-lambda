@@ -54,11 +54,11 @@ That should build both binary functions (`bd_checker` and `bd_responder`) to the
 
 ### Prerequisites
 
-* AWS Lambda functions with IAM permissions to read from DynamoDB (for querying birthdays) and write logs to CloudWatch (for logging information/errors).
+* **AWS Lambda functions** with IAM permissions to read from DynamoDB (for querying birthdays) and write logs to CloudWatch (for logging information/errors).
     * The responder function will need a public function URL to use as the callback URL for the GroupMe bot settings (see below).
     * The checker function will need to be connected to an EventBridge Scheduler to run it on a schedule.
 
-* A DynamoDB instance containing the birthdays. The items should all have the following attributes:
+* A **DynamoDB instance** containing the birthdays. The items should all have the following attributes:
     * `user_id`: a `Number` of the user's GroupMe user ID. You can find this by sending an HTTP `GET` request as detailed in [this GroupMe API documentation](https://dev.groupme.com/docs/v3#messages_index).
     * `fullname`: a `String` of the user's name as the bot will print it in birthday messages (e.g. for "John D. Smith", it'll print "It's John D. Smith's birthday today!").
     * `month_num`: a `Number` of the person's birth month (e.g. `4` for April). Should be within the range of `1 - 12`.
@@ -66,7 +66,7 @@ That should build both binary functions (`bd_checker` and `bd_responder`) to the
 
     The `user_id` field should be the partition key with no sort key, and you'll need to configure a global secondary index (GSI) named `month-day-index` with `month_num` as the partition key and `day_num` as the sort key so that the bot can query birthdays based on the current date.
 
-* A GroupMe bot, which you can create on [this page of the GroupMe Developers website](https://dev.groupme.com/bots). You'll need the bot ID as one of the secrets in your `secrets.rs` file (see above), and you'll need to set the callback URL to the public function URL of the responder function (see above).
+* A **GroupMe bot**, which you can create on [this page of the GroupMe Developers website](https://dev.groupme.com/bots). You'll need the bot ID as one of the secrets in your `secrets.rs` file (see above), and you'll need to set the callback URL to the public function URL of the responder function (see above).
 
 
 ### Deploying
