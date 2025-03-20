@@ -1,0 +1,12 @@
+[package]
+name = "bd_responder"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+lambda_runtime.workspace = true
+regex = "1.11.1"
+serde_json.workspace = true
+shared = { path = "../shared" }
+tokio.workspace = true
