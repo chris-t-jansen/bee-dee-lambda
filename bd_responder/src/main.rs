@@ -1,17 +1,25 @@
-use lambda_runtime::{Context, Error, LambdaEvent, service_fn, tracing::info};
+// External dependencies
+use lambda_runtime::{
+    Context,
+    Error,
+    LambdaEvent,
+    service_fn,
+    tracing::info,
+};
 use regex::Regex;
 use serde_json::Value;
 
+// Internal dependencies
 use shared::{
     dates::{day_num_to_ordinal, month_num_to_str},
     dynamodb::BirthdaysDBClient,
     messaging::GMMessenger,
+    tracing::init_custom_rust_subscriber,
 };
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    shared::tracing::init_custom_rust_subscriber();
-
+    init_custom_rust_subscriber();
     lambda_runtime::run(service_fn(responder)).await?;
     Ok(())
 }
@@ -35,7 +43,7 @@ async fn responder(event: LambdaEvent<Value>) -> Result<(), Error> {
 }
 
 async fn message_handler(event_value: &Value) {
-    let msg_text: String = get_from_body_json(&event_value, "text").unwrap_or_default();
+    let msg_text: String = get_from_body_json(event_value, "text").unwrap_or_default();
     let msg_parts: (&str, &str) = msg_text.trim().split_once(' ').unwrap_or_default();
 
     // Matches "!bd" (case insensitive)
@@ -48,25 +56,25 @@ async fn message_handler(event_value: &Value) {
     // Matches "hello" or "hi" (case insensitive) with or without an exclamation point
     command_re = Regex::new(r"(([Hh][Ee][Ll]{2}[Oo])|([Hh][Ii]))!?").unwrap();
     if command_re.is_match(msg_parts.1) {
-        cmd_hello_handler(&event_value).await;
+        cmd_hello_handler(event_value).await;
         return;
     }
 
     // Matches "me" (case insensitive)
     command_re = Regex::new(r"[Mm][Ee]").unwrap();
     if command_re.is_match(msg_parts.1) {
-        cmd_me_handler(&event_value).await;
+        cmd_me_handler(event_value).await;
         return;
     }
 
     // If we got to the end, then the text started with "!bd" but didn't contain a valid command phrase,
     // so send a message telling the sender that Bee-Dee couldn't understand what they were asking.
-    cmd_error_handler(&event_value).await;
+    cmd_error_handler(event_value).await;
 }
 
 async fn cmd_hello_handler(event_value: &Value) {
-    let name = get_from_body_json(&event_value, "name").unwrap();
-    let user_id = get_from_body_json(&event_value, "sender_id")
+    let name = get_from_body_json(event_value, "name").unwrap();
+    let user_id = get_from_body_json(event_value, "sender_id")
         .unwrap()
         .parse()
         .expect("Couldn't parse user's id from String to u64 in `hello` handler");
@@ -82,7 +90,7 @@ async fn cmd_hello_handler(event_value: &Value) {
 }
 
 async fn cmd_me_handler(event_value: &Value) {
-    let user_id = get_from_body_json(&event_value, "sender_id")
+    let user_id = get_from_body_json(event_value, "sender_id")
         .unwrap()
         .parse()
         .expect("Couldn't parse user's id from String to u64 in `me` handler");
@@ -132,7 +140,7 @@ async fn cmd_me_handler(event_value: &Value) {
 }
 
 async fn cmd_error_handler(event_value: &Value) {
-    let user_id = get_from_body_json(&event_value, "sender_id")
+    let user_id = get_from_body_json(event_value, "sender_id")
         .unwrap()
         .parse()
         .expect("Couldn't parse user's id from String to u64 in error handler");
@@ -160,7 +168,7 @@ fn auth_valid_agent(event_value: &Value) -> bool {
 }
 
 fn check_user_sender(event_value: &Value) -> bool {
-    let sender_type_result = get_from_body_json(&event_value, "sender_type");
+    let sender_type_result = get_from_body_json(event_value, "sender_type");
 
     if let Some(sender_type) = sender_type_result {
         info!("Found sender_type `{}`, comparing to `user`...", sender_type);

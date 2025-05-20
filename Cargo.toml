@@ -7,7 +7,7 @@ members = [
 ]
 
 [workspace.package]
-version = "1.0.0"
+version = "1.0.1"
 edition = "2024"
 authors = ["Chris Jansen <chris.jansen.work+aws@gmail.com>"]
 
@@ -16,3 +16,4 @@ lambda_runtime = "0.13.0"
 serde_json = "1.0.140"
 tokio = "1.44.1"
 chrono = "0.4.40"
+shared = { path = "shared" }

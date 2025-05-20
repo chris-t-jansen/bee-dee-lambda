@@ -1,11 +1,13 @@
+// External dependencies
 use lambda_runtime::{
     Error,
     LambdaEvent,
     service_fn,
-    tracing::info
+    tracing::info,
 };
 use serde_json::Value;
 
+// Internal dependencies
 use shared::{
     dynamodb::BirthdaysDBClient,
     messaging::GMMessenger,
@@ -15,7 +17,6 @@ use shared::{
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     init_custom_rust_subscriber();
-
     lambda_runtime::run(service_fn(checker)).await?;
     Ok(())
 }

@@ -8,5 +8,5 @@ authors.workspace = true
 lambda_runtime.workspace = true
 regex = "1.11.1"
 serde_json.workspace = true
-shared = { path = "../shared" }
+shared.workspace = true
 tokio.workspace = true

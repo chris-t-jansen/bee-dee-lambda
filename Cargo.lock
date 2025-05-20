@@ -486,7 +486,7 @@ dependencies = [
 
 [[package]]
 name = "bd_checker"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "chrono",
  "lambda_runtime",
@@ -497,7 +497,7 @@ dependencies = [
 
 [[package]]
 name = "bd_responder"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "lambda_runtime",
  "regex",
@@ -2144,7 +2144,7 @@ dependencies = [
 
 [[package]]
 name = "shared"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "aws-config",
  "aws-sdk-dynamodb",

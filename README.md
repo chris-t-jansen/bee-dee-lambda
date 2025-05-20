@@ -37,7 +37,7 @@ As for why I'm open-sourcing my work, the AWS SDKs aren't very well documented a
     cd bee-dee-lambda
     ```
 
-3. Add `secrets.rs` to `/shared/src/`. This file contains the necessary secrets to run the bot, such as the ARN for the DynamoDB instance. Secrets should be declared as public `&str` constants (e.g. `pub const MY_SECRET: &str = "my_very_special_secret"`).
+3. Add `secrets.rs` to `/shared/src/`. This file contains the necessary secrets to run the bot, such as the ARN for the DynamoDB instance. Secrets should be declared as public `&str` constants (e.g. `pub const MY_SECRET: &str = r"my_very_special_secret"`).
 
 4. Run the build command to build the functions:
     ```bash
@@ -74,18 +74,18 @@ That should build both binary functions (`bd_checker` and `bd_responder`) to the
 > [!NOTE]
 > Theoretically, there's a way to deploy the Lambda functions by running `cargo lambda deploy` ([see here](https://www.cargo-lambda.info/guide/getting-started.html#step-6-deploy-the-function-on-aws-lambda)). However, I don't have the AWS CLI installed, so I do it the manual way of uploading `.zip` files.
 
-1. After building the binaries (see above), compress the binaries to individual zip files:
+1. After building the binaries (see above), compress the binaries to individual zip files (the parentheses create a subshell, so no need to `cd -` after each command):
 
     ```bash
-    zip target/lambda/bd_responder/bootstrap.zip target/lambda/bd_responder/bootstrap
-    zip target/lambda/bd_checker/bootstrap.zip target/lambda/bd_checker/bootstrap
+    (cd target/lambda/bd_checker && zip bootstrap.zip bootstrap)
+    (cd target/lambda/bd_responder && zip bootstrap.zip bootstrap)
     ```
 
 2. Modify the permissions of the zip files so that they're executable by the Lambda runtime on AWS:
 
     ```bash
-    chmod a+x target/lambda/bd_responder/bootstrap.zip
     chmod a+x target/lambda/bd_checker/bootstrap.zip
+    chmod a+x target/lambda/bd_responder/bootstrap.zip
     ```
 
 3. Navigate to the page for your Lambda function in the AWS Management Console.
